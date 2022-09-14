@@ -7,7 +7,7 @@ import rhino3dm
 import manager
 from typing import List
 from datetime import *
-
+import trees
 
 # register hops app as middleware
 app = Flask(__name__)
@@ -31,6 +31,31 @@ def BinaryMultiply(a: float, b: float):
     return a * b
 
 #Follow up with the repo: list works for lines but not points, ie, https://github.com/mcneel/compute.rhino3d/issues/316
+
+
+@hops.component(
+    "/makeTrees",
+    name="trees",
+    nickname="trees",
+    description="trees",
+    icon="pointat.png",
+    inputs=[
+        hs.HopsPoint("p","p","p"),
+        hs.HopsInteger("i", "i", "i"),
+        hs.HopsInteger("s", "s", "s"),
+        hs.HopsBoolean("isOrg","b","b"),
+        hs.HopsBoolean("isCull","b","b")
+
+    ],
+    outputs=[
+        hs.HopsPoint("tree", "tree", "tree")
+    ]
+)
+def makeTrees(point, i, s, isOrig, isCull):
+    return trees.Voxelise(i, s, isOrig, isCull)
+
+
+
 
 @hops.component(
     "/linesA",
