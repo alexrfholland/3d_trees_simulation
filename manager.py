@@ -7,58 +7,66 @@ import visualiser
 import world
 import rhino3dm
 
-trees: List[Agent] = []
-hello = 5
+class Model:
 
-def Run():
-    global hello
-    hello = 2
-    print('starting to run model')
-    rawTrees = jsonImporter.ImportTrees()
-    print(f'loaded {len(rawTrees)} raw trees')
-
-    for row in rawTrees:
-        a = Agent(row, 'tree')
-        trees.append(a)
-    
-    log = f'made {len(trees)} agents'
-    print(log)
-    return log
+    trees: List[Agent] = []
+    isInit = False
+    isJSON = False
+    isWorld = False
+    count = 0
 
 
-def BuildBases(basePts: List[rhino3dm.Point3d]):
-    world.PopulateBase(basePts)
+    def __init__(self):
+        self.isInit = True
+        self.IncreaseCount()
+        
+    def IncreaseCount(self):
+        self.count = self.count + 1
 
-    for tree in trees:
-        tree.point = world.AssignBases2(tree)
+    def LoadJSON(self):
+        print('starting to run model')
+        rawTrees = jsonImporter.ImportTrees()
+        print(f'loaded {len(rawTrees)} raw trees')
 
-    return f'building world - finished assigning bases'
-    
-#currently just does trees 
-def GetResources(_year):
-    pts = []
-    ages = []
-    perfs = []
-    reses = []
+        for row in rawTrees:
+            a = Agent(row, 'tree')
+            self.trees.append(a)
+        
+        log = f'made {len(self.trees)} agents'
+        self.isJSON = True
+        self.IncreaseCount()
+        print(log)
+        return log
 
-    year = str(round(_year))
 
-    print(f'Getting for year {year}!')
-    print(f'number of agents is {len(trees)}')
+    def BuildBases(self, basePts: List[rhino3dm.Point3d]):
+        print('#####called build bases')
+        world.PopulateBase(basePts)
 
-    for agent in trees:
+        for tree in self.trees:
+            tree.point = world.AssignBases2()
 
-        ag = agent.age[year]
-        perf = agent.performance[year]
-        res = agent.resources[year]
-        pt = agent.point
+        print('#####finished build bases')
 
-        ages.append(ag)
-        perfs.append(perf)
-        reses.append(res)
-        pts.append(pt)
 
-        if "year" in agent.age:
+        self.isWorld = True
+        self.IncreaseCount()
+        return f'building world - finished assigning bases'
+        
+    #currently just does trees 
+    def GetResources(self, _year):
+        pts = []
+        ages = []
+        perfs = []
+        reses = []
+
+        year = str(round(_year))
+
+        print(f'Getting for year {year}!')
+        print(f'number of agents is {len(self.trees)}')
+
+        for agent in self.trees:
+
             ag = agent.age[year]
             perf = agent.performance[year]
             res = agent.resources[year]
@@ -69,12 +77,24 @@ def GetResources(_year):
             reses.append(res)
             pts.append(pt)
 
+            print(pt)
 
-    return (pts, ages, perfs, reses)
+            if "year" in agent.age:
+                ag = agent.age[year]
+                perf = agent.performance[year]
+                res = agent.resources[year]
+                pt = agent.point
 
-def GetPts(_year):
-    year = str(round(_year))
-    return visualiser.GetPoints2(trees, year)
+                ages.append(ag)
+                perfs.append(perf)
+                reses.append(res)
+                pts.append(pt)
+
+        return (pts, ages, perfs, reses)
+
+    def GetPts(self, _year):
+        year = str(round(_year))
+        return visualiser.GetPoints2(self.trees, year)
     
 
 

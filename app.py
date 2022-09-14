@@ -9,7 +9,6 @@ from typing import List
 from datetime import *
 
 
-
 # register hops app as middleware
 app = Flask(__name__)
 hops: hs.HopsFlask = hs.Hops(app)
@@ -21,8 +20,7 @@ def help():
     return "Welcome to Grashopper Hops for CPython!"
 
 ##model stuff
-manager.Run()
-
+model: manager.Model = manager.Model()
 
 @hops.component(
     "/binmult",
@@ -32,6 +30,46 @@ manager.Run()
 def BinaryMultiply(a: float, b: float):
     return a * b
 
+#Follow up with the repo: list works for lines but not points, ie, https://github.com/mcneel/compute.rhino3d/issues/316
+
+@hops.component(
+    "/linesA",
+    name="Lines",
+    inputs=[
+        hs.HopsLine("Line", "L", access=hs.HopsParamAccess.LIST),
+        hs.HopsNumber("i", "i"),
+    ],
+    outputs=[
+        hs.HopsPoint("P", "P")
+    ]
+)
+def lines(lines: rhino3dm.Line, i):
+    points = []
+    for line in lines:
+        point = line.PointAt(i)
+        points.append(point)
+    return points
+
+
+@hops.component(
+    "/pts",
+    name="Pts",
+    inputs=[
+        hs.HopsPoint("Pt", "L", access=hs.HopsParamAccess.LIST),
+        hs.HopsNumber("i", "i"),
+    ],
+    outputs=[
+        hs.HopsPoint("P", "P")
+    ]
+)
+def points(pts: rhino3dm.Point3d, i):
+    outPts = []
+    for pt in pts:
+        point = rhino3dm.Point3d(0,0,0)
+        outPts.append(point)
+    return outPts
+
+#Components
     
 @hops.component(
     "/startModel",
@@ -53,15 +91,14 @@ def startModel(toggle, pt):
 
     message = 'not loaded'
     if toggle:
-        'hi'
-    #manager.Run  
-    #message = f'loaded {len(manager.trees)} trees {manager.hello}'
-    
+        model.LoadJSON()
+        message = f'loaded {len(model.trees)} trees and isJSON is {model.isJSON}'
 
-    log = f'{message} at {timestamp}'
+    #manager.Run  
+    
+    log = f'{message} at {timestamp}, count is {model.count}'
 
     return log
-
 
 @hops.component(
     "/loadWorld",
@@ -71,26 +108,56 @@ def startModel(toggle, pt):
     icon="pointat.png",
     inputs=[
         hs.HopsBoolean("Toggle", "T", "Evaluate Function"),
-        hs.HopsPoint("bases", "bases", "bases", access= hs.HopsParamAccess.TREE)
+        hs.HopsPoint("p","p","p"),
+        hs.HopsLine("bases", "bases", "bases", access= hs.HopsParamAccess.LIST)
     ],
-    outputs=
-    [hs.HopsString("L", "L", "log")
+    outputs=[
+        hs.HopsString("L", "L", "log")
     ]
 )
-def loadWorld(toggle, bases):
-    
-    message = "Not Loaded 3"
+def loadWorld(toggle, updater, bases: rhino3dm.Line):
+    update = updater
+    message = "Not Loaded "
     if toggle:
-        my_list = list(bases.values())
+        message = "No Agents"
+        if model.isJSON:
+            points = [line.PointAt(0) for line in bases]
+            message = f'loaded {len(points)}'
+            model.BuildBases(points)
+    
+    timestamp = datetime.now().strftime("%H-%M-%S")
+    log = f'{message} at {timestamp}, count is {model.count}'
+    return log
 
-        timestamp = datetime.now().strftime("%H-%M-%S")
-
-        message = f'loaded {len(my_list)} bases at {timestamp}'
-
-
-
-        #manager.BuildBases(my_list)
-    return message
+@hops.component(
+    "/loadWorld2",
+    name="world",
+    nickname="world",
+    description="world",
+    icon="pointat.png",
+    inputs=[
+        hs.HopsBoolean("Toggle", "T", "Evaluate Function"),
+        hs.HopsPoint("p","p","p"),
+        hs.HopsPoint("bases", "bases", "bases", access= hs.HopsParamAccess.LIST)
+    ],
+    outputs=[
+        hs.HopsString("L", "L", "log")
+    ]
+)
+def loadWorld(toggle, updater, bases):
+    update = updater
+    message = "Not Loaded "
+    if toggle:
+        message = "No Agents"
+        if model.isJSON:
+            my_list = [pt for pt in bases]
+            #my_list = list(bases.values())
+            message = f'loaded {len(my_list)}'
+            model.BuildBases(my_list)
+    
+    timestamp = datetime.now().strftime("%H-%M-%S")
+    log = f'{message} at {timestamp}, count is {model.count}'
+    return log
 
 
 @hops.component(
@@ -100,15 +167,25 @@ def loadWorld(toggle, bases):
     description="Get agets",
     icon="pointat.png",
     inputs=[
+        hs.HopsBoolean("Toggle", "T", "Evaluate Function"),
+        hs.HopsPoint("p","p","p"),
         hs.HopsInteger("y", "y", "Year")
     ],
-    outputs=
-    [hs.HopsPoint("P", "P", "Point on curve at t")
+    outputs=[   
+        hs.HopsPoint("P", "P", "Point on curve at t", access = hs.HopsParamAccess.LIST),
+        hs.HopsString("L", "L", "log")
     ]
 )
-def getAgents(y=0):
-    info = manager.GetResources(y)
-    return (info[0])
+def getAgents(toggle, updater, y=0):
+    if toggle:
+        info = model.GetResources(y)
+        timestamp = datetime.now().strftime("%H-%M-%S")
+        log = f'{timestamp}: isInit is {model.isInit}, isJSON is {model.isJSON}, isWorld is {model.isWorld}'
+        return (info[0], log)
+    else:
+        log = f'{timestamp}: not loaded'
+        pt = rhino3dm.Point3d(-1,-1,-1)
+        return (pt, log)
 
 
 @hops.component(
