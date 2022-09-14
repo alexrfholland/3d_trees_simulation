@@ -23,6 +23,7 @@ class Agent:
     def Test(self):
         #print(f'{self.age} {self.kind} {self.resources} {self.performance}')
         print(f'ages are {self.age}')
+        "hello"
 
     
     def GetPoint(self):
