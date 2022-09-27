@@ -1,26 +1,21 @@
 from unicodedata import name
 import pandas as pd
-import settings as set
 from typing import List
 from typing import Dict
 import math
-import numpy as np
 
 import rhino3dm
+#import treeSettings as set
+import settings as set
 
 path = set.IMPORTFOLDER2 + 'clampedData.csv'
+#path = set.IMPORTPATH + 'clampedData.csv'
+
 data = pd.read_csv(path)
 data.set_index('Tree', inplace = True)
 data.columns = [c.replace(' ', '_') for c in data.columns]
 
-
-
-"""trees: List[pd.DataFrame] = []
-for i in range(1,17):
-    tree = data.query(f'Tree == {i}')
-    trees.append[tree]
-"""
-
+"""Todo: Figure out how to import files/modules from a different subfolder, ie. https://stackoverflow.com/questions/4383571/importing-files-from-different-folder"""
 
 def MakePt(x):
     pt: rhino3dm.Point3d = rhino3dm.Point3d(x.posX, x.posY, x.posZ)
@@ -52,7 +47,7 @@ def CullPts(pts : List[rhino3dm.Point3d]):
     
     tups = []
     for pt in pts:
-        t = (pt.X,pt.Y,pt.Z)
+        t = [pt.X,pt.Y,pt.Z]
         tups.append(t)
 
     output = []
@@ -68,7 +63,7 @@ def CullPts(pts : List[rhino3dm.Point3d]):
 
 
     print(f'culled is {len(uniquePts)}')
-    return uniquePts
+    return (uniquePts, output)
         
 
 
@@ -89,5 +84,17 @@ def Voxelise(index, vSize, isOrig, isCull):
         return outs
 
     else:
-        return CullPts(outs) 
+        return CullPts(outs)[0] 
 
+
+def Tupelise(index, vSize):
+    ptsClamped = data.apply(MakeClamped, args = (vSize, ), axis = 1).reset_index(name='voxel')
+
+    ptsClamped.set_index('Tree', inplace = True)
+
+    pts = data.apply(MakePt, axis = 1).reset_index(name='voxel')
+    pts.set_index('Tree', inplace = True)
+
+    outs = GetTreeVoxels(pts, ptsClamped, index, False)
+
+    return CullPts(outs)[1] 

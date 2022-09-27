@@ -19,6 +19,11 @@ class Model:
     def __init__(self):
         self.isInit = True
         self.IncreaseCount()
+
+    def doModel(self):
+        self.LoadJSON()
+        self.BuildBases()
+        self.AssignTreePts()
         
     def IncreaseCount(self):
         self.count = self.count + 1
@@ -53,9 +58,15 @@ class Model:
         self.IncreaseCount()
         return f'building world - finished assigning bases'
         
+    def AssignTreePts(self, year):
+        for tree in self.trees:
+            tree.CheckandChangeTreePts(year)
+            
+
     #currently just does trees 
     def GetResources(self, _year):
         pts = []
+        treePts: List[rhino3dm.Point3d] = []
         ages = []
         perfs = []
         reses = []
@@ -71,13 +82,17 @@ class Model:
             perf = agent.performance[year]
             res = agent.resources[year]
             pt = agent.point
+            
 
             ages.append(ag)
             perfs.append(perf)
             reses.append(res)
             pts.append(pt)
 
-            print(pt)
+            print(f'tree Pts in agent are {agent.treePts[-1]}')
+
+            treePts.extend(agent.treePts[-1])
+
 
             if "year" in agent.age:
                 ag = agent.age[year]
@@ -90,7 +105,8 @@ class Model:
                 reses.append(res)
                 pts.append(pt)
 
-        return (pts, ages, perfs, reses)
+
+        return (pts, ages, perfs, reses, treePts)
 
     def GetPts(self, _year):
         year = str(round(_year))

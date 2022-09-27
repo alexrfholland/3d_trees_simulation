@@ -4,6 +4,24 @@ from typing import Dict
 import visualiser
 import rhino3dm
 
+
+# generate random integer values
+import random
+from random import seed
+from random import randint
+
+
+
+agentBoundary: rhino3dm.NurbsSurface
+
+
+
+
+def MakeWorld(agentBounds: rhino3dm.NurbsSurface):
+    agentBoundary = agentBounds
+
+def GetBases = 
+
 agentBases: List[rhino3dm.Point3d] = []
 basePool: List[rhino3dm.Point3d] = []
 

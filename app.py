@@ -7,12 +7,11 @@ import rhino3dm
 import manager
 from typing import List
 from datetime import *
-import trees
+import treeStuff.trees as trees
 
 # register hops app as middleware
 app = Flask(__name__)
 hops: hs.HopsFlask = hs.Hops(app)
-
 
 # flask app can be used for other stuff drectly
 @app.route("/help")
@@ -32,6 +31,22 @@ def BinaryMultiply(a: float, b: float):
 
 #Follow up with the repo: list works for lines but not points, ie, https://github.com/mcneel/compute.rhino3d/issues/316
 
+@hops.component(
+    "/surfacerandpt",
+    name="agents",
+    nickname="agents",
+    description="Get agets",
+    icon="pointat.png",
+    inputs=[
+        hs.HopsSurface("y", "y", "Year")
+    ],
+    outputs=
+    [hs.HopsPoint("P", "P", "Point on curve at t")
+    ]
+)
+def getAgentsb(surf : rhino3dm.NurbsSurface):
+    pt: rhino3dm.Point3d = surf.PointAt(.5,.5)
+    return (pt)
 
 @hops.component(
     "/makeTrees",
@@ -53,48 +68,6 @@ def BinaryMultiply(a: float, b: float):
 )
 def makeTrees(point, i, s, isOrig, isCull):
     return trees.Voxelise(i, s, isOrig, isCull)
-
-
-
-
-@hops.component(
-    "/linesA",
-    name="Lines",
-    inputs=[
-        hs.HopsLine("Line", "L", access=hs.HopsParamAccess.LIST),
-        hs.HopsNumber("i", "i"),
-    ],
-    outputs=[
-        hs.HopsPoint("P", "P")
-    ]
-)
-def lines(lines: rhino3dm.Line, i):
-    points = []
-    for line in lines:
-        point = line.PointAt(i)
-        points.append(point)
-    return points
-
-
-@hops.component(
-    "/pts",
-    name="Pts",
-    inputs=[
-        hs.HopsPoint("Pt", "L", access=hs.HopsParamAccess.LIST),
-        hs.HopsNumber("i", "i"),
-    ],
-    outputs=[
-        hs.HopsPoint("P", "P")
-    ]
-)
-def points(pts: rhino3dm.Point3d, i):
-    outPts = []
-    for pt in pts:
-        point = rhino3dm.Point3d(0,0,0)
-        outPts.append(point)
-    return outPts
-
-#Components
     
 @hops.component(
     "/startModel",
@@ -154,6 +127,7 @@ def loadWorld(toggle, updater, bases: rhino3dm.Line):
     log = f'{message} at {timestamp}, count is {model.count}'
     return log
 
+
 @hops.component(
     "/loadWorld2",
     name="world",
@@ -203,10 +177,12 @@ def loadWorld(toggle, updater, bases):
 )
 def getAgents(toggle, updater, y=0):
     if toggle:
+        model.AssignTreePts(y)
         info = model.GetResources(y)
         timestamp = datetime.now().strftime("%H-%M-%S")
         log = f'{timestamp}: isInit is {model.isInit}, isJSON is {model.isJSON}, isWorld is {model.isWorld}'
-        return (info[0], log)
+        #return (info[0], log)
+        return (info[4], log)
     else:
         log = f'{timestamp}: not loaded'
         pt = rhino3dm.Point3d(-1,-1,-1)
