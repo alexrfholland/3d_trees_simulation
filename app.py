@@ -19,7 +19,7 @@ def help():
     return "Welcome to Grashopper Hops for CPython!"
 
 ##model stuff
-model: manager.Model = manager.Model()
+#model: manager.Model = manager.Model()
 
 @hops.component(
     "/binmult",
@@ -30,6 +30,29 @@ def BinaryMultiply(a: float, b: float):
     return a * b
 
 #Follow up with the repo: list works for lines but not points, ie, https://github.com/mcneel/compute.rhino3d/issues/316
+
+
+@hops.component(
+    "/Model2",
+    name="agents",
+    nickname="agents",
+    description="Get agets",
+    icon="pointat.png",
+    inputs=[
+        hs.HopsInteger("y", "y", "Year")
+    ],
+    outputs=
+    [hs.HopsPoint("P", "P", "points"),
+    hs.HopsPoint("B", "B", "points"),
+    hs.HopsVector("C","c","colors")
+    ]
+)
+def getAgentsb(year):
+    model: manager.Model = manager.Model()
+    model.doModel(year)
+    res = model.GetResources(year)
+    return (res[-1], res[0], res[-2])
+
 
 @hops.component(
     "/surfacerandpt",

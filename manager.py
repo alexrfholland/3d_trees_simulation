@@ -1,11 +1,12 @@
 from http.server import CGIHTTPRequestHandler
-import jsonImporter
+import importer
 from agent import Agent
 from typing import List
 from typing import Dict
 import visualiser
 import world
 import rhino3dm
+
 
 class Model:
 
@@ -20,22 +21,59 @@ class Model:
         self.isInit = True
         self.IncreaseCount()
 
-    def doModel(self):
+    
+    def doModel(self, year):
         self.LoadJSON()
-        self.BuildBases()
-        self.AssignTreePts()
-        
+        self.AssignTreePts(year)
+            
     def IncreaseCount(self):
         self.count = self.count + 1
 
-    def LoadJSON(self):
+    def LoadParquet(self):
         print('starting to run model')
-        rawTrees = jsonImporter.ImportTrees()
+        df = importer.ImportParquetTrees()
+        print(f'loaded {len(df)} raw trees')
+
+        for i, row in enumerate(df.itertuples(), 1):
+            print(i, row)
+
+    
+    
+    def cellToAgent(self, x):
+        #x is a dictionary with the agent info in it
+        a = Agent()
+
+    def LoadParquet2(self, year):  ##this would form the basis of the visualiser
+        print('starting to run model')
+        rawTrees = importer.ImportParquetTrees()
         print(f'loaded {len(rawTrees)} raw trees')
 
+        treeAgents: List[Agent] = []
+        treeAgents = rawTrees.applymap(self.cellToAgent)
+
+        
+        log = f'made {len(self.trees)} agents'
+        self.isJSON = True
+        self.IncreaseCount()
+        print(log)
+        return log
+
+
+
+
+    def LoadJSON(self):
+        print('starting to run model')
+        rawTrees = importer.ImportTrees()
+        print(f'loaded {len(rawTrees)} raw trees')
+        count = 0
+
         for row in rawTrees:
+
             a = Agent(row, 'tree')
             self.trees.append(a)
+            if(count > 10000):
+                break
+            count = count + 1
         
         log = f'made {len(self.trees)} agents'
         self.isJSON = True
@@ -49,7 +87,7 @@ class Model:
         world.PopulateBase(basePts)
 
         for tree in self.trees:
-            tree.point = world.AssignBases2()
+            tree.base = world.AssignBases2()
 
         print('#####finished build bases')
 
@@ -70,6 +108,7 @@ class Model:
         ages = []
         perfs = []
         reses = []
+        cols = []
 
         year = str(round(_year))
 
@@ -77,36 +116,28 @@ class Model:
         print(f'number of agents is {len(self.trees)}')
 
         for agent in self.trees:
-
-            ag = agent.age[year]
-            perf = agent.performance[year]
-            res = agent.resources[year]
-            pt = agent.point
-            
-
-            ages.append(ag)
-            perfs.append(perf)
-            reses.append(res)
-            pts.append(pt)
-
-            print(f'tree Pts in agent are {agent.treePts[-1]}')
-
-            treePts.extend(agent.treePts[-1])
-
-
-            if "year" in agent.age:
+            if year in agent.age:
                 ag = agent.age[year]
                 perf = agent.performance[year]
                 res = agent.resources[year]
-                pt = agent.point
+                pt = agent.base
+                
 
                 ages.append(ag)
                 perfs.append(perf)
                 reses.append(res)
                 pts.append(pt)
 
+                #print(f'tree Pts in agent are {agent.treePts[-1]}')
 
-        return (pts, ages, perfs, reses, treePts)
+                treePts.extend(agent.treePts[-1])
+
+                col = agent.GetCols(year)
+
+                for pt in agent.treePts[-1]:
+                    cols.append(rhino3dm.Vector3d(col[0], col[1], col[2]))
+
+        return (pts, ages, perfs, reses, cols, treePts)
 
     def GetPts(self, _year):
         year = str(round(_year))

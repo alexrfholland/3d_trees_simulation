@@ -12,7 +12,7 @@ def GetPoints(agents: List[Agent], year):
         val2 = remap(val, 0, 50, 0, 10)
 
         for i in range(val2):
-            pt = rhino3dm.Point3d(agent.point.X, i, agent.point.Z)      
+            pt = rhino3dm.Point3d(agent.base.X, i, agent.base.Z)      
             visuals.Add(pt)
 
     return visuals
@@ -26,7 +26,7 @@ def GetPoints2(agents: List[Agent], year):
         val2 = remap(val, 0, 50, 0, 10)
 
         for i in range(round(val2)):
-            pt = rhino3dm.Point3d(agent.point.X, i, agent.point.Z)      
+            pt = rhino3dm.Point3d(agent.base.X, i, agent.base.Z)      
             pts.append(pt)
 
     return pts

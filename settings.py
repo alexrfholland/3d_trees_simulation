@@ -3,8 +3,12 @@ IMPORTFOLDER = 'C:\\Users\\alexholland\\Documents\\test\\'
 IMPORTFOLDER2 = 'C:\\Users\\alexholland\\OneDrive - The University of Melbourne\\_PhD Private\\Source FIles\\Chapter 3 Briefs\\Sim\\data\\trees\\'
 
 
+IMPORTFOLDERGEO = 'C:\\Users\\alexholland\\OneDrive - The University of Melbourne\\_PhD Private\\Source FIles\\Chapter 3 Briefs\\Sim\\data\\'
 
-VOXELLEVEL = 3
+IMPORTWINDOWS = importPath2 = 'C:\\Users\\alexholland\\OneDrive - The University of Melbourne\\_PhD Private\\Source FIles\\Chapter 3 Briefs\\Sim\\pandas\\'
+IMPORTWINDOW2 = 'C:\\Users\\alexholland\\OneDrive - The University of Melbourne\\_PhD Private\\Source FIles\\Chapter 3 Briefs\\Sim\\'
+
+VOXELLEVEL = 2
 
 #tree settings
 YOUNG = range(1, 5)
