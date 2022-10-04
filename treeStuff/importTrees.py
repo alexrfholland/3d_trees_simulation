@@ -19,11 +19,19 @@ def MakePt(x):
     pts: List[rhino3dm.Point3d] = []
     ptList: rhino3dm.Point3dList = rhino3dm.Point3dList()
     
+    minY = 0
+
     for i in x:
         #print(f'i is {i}')
         pt: rhino3dm.Point3d = rhino3dm.Point3d(i[0],i[1],i[2])
+     
         pts.append(pt)
         ptList.Add(pt.X,pt.Y,pt.Z)
+
+    min = ptList.BoundingBox.Min.Y
+    t = rhino3dm.Transform.Translation(rhino3dm.Vector3d(0,0,-min))
+    ptList.Transform(t)
+    
     #return(pts)# return list of points
     return(ptList) # return rhino 'pointlist' collection of points
 

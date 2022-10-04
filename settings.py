@@ -13,7 +13,7 @@ VOXELLEVEL = 2
 #tree settings
 YOUNG = range(1, 5)
 MEDIUM = range(5, 10)
-OLD = range(10, 17)
+OLD = range(10, 16)
 
 MDBH = range(40,80)
 ODBH = range(80,100)

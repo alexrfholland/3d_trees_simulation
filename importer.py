@@ -8,7 +8,68 @@ import json
 from dictor import dictor
 
 import rhino3dm
+from codetiming import Timer
 
+from agent import Agent
+
+from typing import List
+from typing import Dict
+
+
+@Timer()
+def LoadParquet():
+    df = ImportParquetTrees()
+    #delete first irrelevant column so columns represent years
+    #df.drop([df.columns[0]], axis = 1)
+    print(f'loadeda dataframe of {len(df.index)} raw trees')
+    return df
+
+@Timer()
+def GetCells(df):
+    #this gets every row, each row is an agent, each column is a year, each cell describes the stats of an agent for that year
+    #the output is a list per agent where each element is the values for that year
+    tempAgents = []
+
+    for i in range(len(df.index)):
+        rowList = df.loc[i, :].values.flatten().tolist()
+
+        #agent stats
+        perf = {}
+        age = {}
+        isAlive = {}
+        res = {}
+        #print("new agent")
+
+        for year in range(len(rowList)):
+            cell = rowList[year]
+            perf.update({year : cell['performance']})
+            age.update({year : cell['age']})
+            isAlive.update({year : cell['alive']})
+            res.update({year : cell['resources']})
+
+            #print(cell)
+
+        #tempAgent = (perf, age, isAlive, res)
+        tempAgent = {'age' : age,
+                    'performance' : perf,
+                    'resources' : res,
+                    'isAlive' : isAlive}
+        tempAgents.append(tempAgent)
+    print(f'created {len(tempAgents)} agentinfos')
+    return tempAgents
+
+@Timer()
+def ConvertToAgents(tempAgents):
+    agentList: List[Agent] = []
+    for temp in tempAgents:
+        a: Agent = Agent(temp, 'tree')
+        agentList.append(a)
+    print(f'created {len(tempAgents)} agents')
+    #print(f'{agentList[8000].isAlive}')
+    return agentList
+
+
+###old ones below
 
 def ImportTrees():
     path = set.IMPORTWINDOW2 + 'json//trees.json'
@@ -34,34 +95,7 @@ def ImportParquetSelectTreeYrs(year):
     return df
 
 
-def LoadParquet():
-    print('starting to run model')
-    df = ImportParquetTrees()
-    #delete first irrelevant column so columns represent years
-    #df.drop([df.columns[0]], axis = 1)
-    print(f'loaded {len(df)} raw trees')
 
-    
-    #convert a list of agents to a row
-
-    print(len(df.index))
-    print(df)
-
-    #this gets every row, each row is an agent, each column is a year, each cell describes the stats of an agent for that year
-    #the output is a list per agent where each element is the values for that year
-    for i in range(len(df.index)):
-        rowList = df.loc[i, :].values.flatten().tolist()
-
-        #agent stats
-        perf = {}
-        age = {}
-        isAlive = {}
-        res = {}
-        print("new agent")
-
-        for year in range(len(rowList)):
-            cell = rowList[year]
-            print(cell)
 
            
         
@@ -70,8 +104,7 @@ def LoadParquet():
 
 
 
-    
-    """#this gets every row, each row is an agent, each column is a year, each cell describes the stats of an agent for that year
+"""#this gets every row, each row is an agent, each column is a year, each cell describes the stats of an agent for that year
     for i, row in enumerate(df.itertuples(), 1):
         print(i, row[30])
 
@@ -107,4 +140,3 @@ def LoadParquet():
                 }
         print(info)
         """
-    

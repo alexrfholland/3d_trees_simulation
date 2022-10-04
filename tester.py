@@ -1,5 +1,6 @@
 import manager
 
 model: manager.Model = manager.Model()
-model.doModel(3)
-
+year =200
+model.doModel(year)
+model.GetResources(year)

@@ -6,6 +6,8 @@ from typing import Dict
 import visualiser
 import world
 import rhino3dm
+from codetiming import Timer
+from tabulate import tabulate
 
 
 class Model:
@@ -23,9 +25,29 @@ class Model:
 
     
     def doModel(self, year):
-        self.LoadJSON()
-        self.AssignTreePts(year)
+        print('starting to run model')
+        #self.LoadJSON()
+        df = importer.LoadParquet()
+        print('calling get agent infos')
+        agentInfos = importer.GetCells(df)
+        print('calling make agents')
+        self.trees = importer.ConvertToAgents(agentInfos)
+        print(f'made {len(self.trees)} trees')
+        print('calling assigning trees')
+        self.AssignPts(year)
+        self.GetSummaries(year)
             
+
+    @Timer()
+    def AssignPts(self, year):
+        print('assigning 3d points')
+        count = 0
+        for tree in self.trees:
+            count = count + 1
+            tree.CheckandChangeTreePts(year)
+        print(f'assigned 3d points to {count} agents')
+    
+    
     def IncreaseCount(self):
         self.count = self.count + 1
 
@@ -96,10 +118,15 @@ class Model:
         self.IncreaseCount()
         return f'building world - finished assigning bases'
         
+    @Timer
     def AssignTreePts(self, year):
+        print('test')
+        """print(f'assigning 3d points to {len(self.trees)} agents')
         for tree in self.trees:
             tree.CheckandChangeTreePts(year)
-            
+        print('assigned 3d points')"""
+    
+    
 
     #currently just does trees 
     def GetResources(self, _year):
@@ -110,13 +137,17 @@ class Model:
         reses = []
         cols = []
 
-        year = str(round(_year))
+        year = _year
 
-        print(f'Getting for year {year}!')
-        print(f'number of agents is {len(self.trees)}')
+        print(f'Getting resources for year {year}!')
+        #print(f'number of agents is {len(self.trees)}')
+
+        count = 0
 
         for agent in self.trees:
-            if year in agent.age:
+            #print(f'agent age is {agent.age}')
+            if agent.isAlive[year] == True:
+                count = count + 1
                 ag = agent.age[year]
                 perf = agent.performance[year]
                 res = agent.resources[year]
@@ -130,14 +161,46 @@ class Model:
 
                 #print(f'tree Pts in agent are {agent.treePts[-1]}')
 
-                treePts.extend(agent.treePts[-1])
+                treePts.extend(agent.treePts[agent.ag])
 
                 col = agent.GetCols(year)
 
-                for pt in agent.treePts[-1]:
+                for pt in agent.treePts[agent.ag]:
                     cols.append(rhino3dm.Vector3d(col[0], col[1], col[2]))
 
+        print(f'added {count} agent stats')
         return (pts, ages, perfs, reses, cols, treePts)
+
+    def GetSummaries(self, year):
+        
+        print(f'getting summaries for {year}')
+        res = ['low', 'medium', 'high', 'total', 'dead', 'lateral']
+        ages = ['small', 'med', 'large']
+        
+        summaries = {}
+        agentsAlive = 0
+
+
+        for resName in res:
+            summaries.update({resName : 0})
+
+        for agName in ages:
+            summaries.update({agName : 0})
+        
+        for agent in self.trees:
+            if agent.isAlive[year]:
+                agentsAlive = agentsAlive + 1
+                summaries[agent.ag] = summaries[agent.ag] + 1
+                for resName in res:
+                    if agent.resources[year][resName] > summaries[resName]:
+                        summaries[resName] = round(agent.resources[year][resName])
+                
+
+        summaries.update({'agents alive' : agentsAlive})
+
+        print(f'summaries are {summaries}')
+       
+
 
     def GetPts(self, _year):
         year = str(round(_year))
